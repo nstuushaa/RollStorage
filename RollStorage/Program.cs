@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RollStorage.Middleware;
 using RollStorage.Models;
 using RollStorage.Repositories; 
 using RollStorage.Services;   
@@ -28,7 +29,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
