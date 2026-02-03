@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RollStorage.Models;
+using RollStorage.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RollStorage.Controllers
 {
@@ -13,48 +14,66 @@ namespace RollStorage.Controllers
     [ApiController]
     public class RollsController : ControllerBase
     {
-        private readonly RollContext _context;
+        private readonly RollService _rollService;
 
-        public RollsController(RollContext context)
+        public RollsController(RollService rollService)
         {
-            _context = context;
+            _rollService = rollService;
         }
 
         // GET: api/Rolls
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Roll>>> GetRolls()
         {
-            return await _context.Rolls.ToListAsync();
+            var rolls = await _rollService.GetAllRollsAsync();
+            return Ok(rolls);
         }
 
         // GET: api/Rolls/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Roll>> GetRoll(int id)
         {
-            var roll = await _context.Rolls.FindAsync(id);
-
-            if (roll == null)
-            {
+            var rolls = await _rollService.GetRollByIdAsync(id);
+            if (rolls == null)
                 return NotFound();
-            }
-
-            return roll;
+            return Ok(rolls);
         }
 
         // Добавление нового рулона на склад
         [HttpPost]
         public async Task<ActionResult<Roll>> PostRoll(Roll roll)
         {
-            _context.Rolls.Add(roll);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetRoll", new { id = roll.Id }, roll);
+            await _rollService.AddRollAsync(roll);
+            return CreatedAtAction(nameof(GetRoll), new { id = roll.Id }, roll);
         }
 
-
-        private bool RollExists(int id)
+        //Удаление рулона с указанным id со склада
+        [HttpPut]
+        public async Task<ActionResult<Roll>> PutRoll(int id, [FromBody] DateTime removeAt)
         {
-            return _context.Rolls.Any(e => e.Id == id);
+            var roll = await _rollService.GetRollByIdAsync(id);
+            if (roll == null)
+                return NotFound();
+
+            roll.RemoveAt = removeAt;
+            await _rollService.UpdateRollAsync(roll);
+            return Ok(roll);
+        }
+
+        //Получение статистики по рулонам
+        [HttpGet("statistics")]
+        public async Task<ActionResult<RollStatisticsDto>> GetRollStatistics([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            try
+            {
+                var statistics = await _rollService.GetStatisticsAsync(startDate, endDate);
+
+                return Ok(statistics);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }
