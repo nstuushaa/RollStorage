@@ -21,29 +21,49 @@ namespace RollStorage.Controllers
             _rollService = rollService;
         }
 
-        // GET: api/Rolls
+        // Получение списка рулонов со склада с фильтрацией 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Roll>>> GetRolls()
+        public async Task<ActionResult<IEnumerable<Roll>>> GetRolls([FromQuery] RollFiltersDto filter)
         {
-            var rolls = await _rollService.GetAllRollsAsync();
-            return Ok(rolls);
+            try
+            {
+                var rolls = await _rollService.GetAllRollsAsync(filter);
+                return rolls;
+            }
+            catch (ArgumentException ex) 
+            { 
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
-        // GET: api/Rolls/5
+        // Получение по id
         [HttpGet("{id}")]
         public async Task<ActionResult<Roll>> GetRoll(int id)
         {
-            var rolls = await _rollService.GetRollByIdAsync(id);
-            if (rolls == null)
-                return NotFound();
-            return Ok(rolls);
+            try
+            {
+                var roll = await _rollService.GetRollByIdAsync(id);
+                return Ok(roll);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         // Добавление нового рулона на склад
         [HttpPost]
-        public async Task<ActionResult<Roll>> PostRoll(Roll roll)
+        public async Task<ActionResult<Roll>> PostRoll(CreateRollDto createRoll)
         {
-            await _rollService.AddRollAsync(roll);
+            var roll = await _rollService.AddRollAsync(createRoll);
             return CreatedAtAction(nameof(GetRoll), new { id = roll.Id }, roll);
         }
 
@@ -51,13 +71,19 @@ namespace RollStorage.Controllers
         [HttpPut]
         public async Task<ActionResult<Roll>> PutRoll(int id, [FromBody] DateTime removeAt)
         {
-            var roll = await _rollService.GetRollByIdAsync(id);
-            if (roll == null)
-                return NotFound();
-
-            roll.RemoveAt = removeAt;
-            await _rollService.UpdateRollAsync(roll);
-            return Ok(roll);
+            try
+            {
+                var result = await _rollService.RemoveRollAsync(id, removeAt);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
         //Получение статистики по рулонам

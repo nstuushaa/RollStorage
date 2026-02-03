@@ -7,10 +7,10 @@ namespace RollStorage.Models
     {
         public int Id { get; set; }
 
-        [Range(0.01, 10000, ErrorMessage = "Длина должна быть больше 0")]
+        [Range(0.01, 10000000, ErrorMessage = "Длина должна быть больше 0")]
         public double Length { get; set; }
 
-        [Range(0.01, 10000, ErrorMessage = "Вес должен быть больше 0")]
+        [Range(0.01, 10000000, ErrorMessage = "Вес должен быть больше 0")]
         public double Weight { get; set; }
         public DateTime AddedAt { get; set; }
 

@@ -13,5 +13,9 @@
         public double TotalWeight { get; set; }
         public TimeSpan MaxDuration { get; set; }
         public TimeSpan MinDuration { get; set; }
+        public DateTime DayOfMinRolls { get; set; }
+        public DateTime DayOfMaxRolls { get; set; }
+        public DateTime DayOfMinSumWeight { get; set; }
+        public DateTime DayOfMaxSumWeight { get; set; }
     }
 }
